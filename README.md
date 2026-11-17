@@ -1,2 +1,40 @@
-# linguists-dictionary
-The Linguist’s Dictionary: a free seven-language learner dictionary with optional Anki flashcards.
+# The Linguist’s Dictionary
+
+**Seven languages. One dictionary. Built for learners.**
+
+[Open the dictionary](https://guillemwilly.github.io/linguists-dictionary/)
+
+A lightweight, browser-based dictionary for Russian, Mandarin Chinese, French, Catalan, Spanish, Portuguese and English. No account, server or API key required for lookups.
+
+## Features
+
+- English definitions and a target-language definition where available.
+- Pronunciation text (IPA or pinyin), word forms, examples, etymology and links to the full sources.
+- Best-effort language detection, with alternate-language switches for ambiguous words.
+- Inflected-form lookup and accent-recovery where the source supports them.
+- Optional Anki Desktop integration, related-word notes, and TSV export when direct connection is unavailable.
+- Light/dark themes, keyboard search, and browser-local history.
+
+## Run
+
+Open `index.html` in a browser, or serve the folder using `python3 -m http.server 8000`. No build step. GitHub Pages serves these same files.
+
+## Anki
+
+Lookups work without Anki. Click **Save cards** to save notes in this browser, or enable **Auto-add**. Click **Export saved cards** to download a TSV. Import it with HTML enabled; map the nine fields (Word, Language, Meaning, Definition, Pronunciation, Forms, Example, Notes, Source). A matching custom note type is created by direct connection, or you can create one manually. If importing into Basic, map Word to Front and Meaning to Back; other fields require a custom note type.
+
+For direct transfer install Anki Desktop and [AnkiConnect](https://ankiweb.net/shared/info/2055492159), restart Anki, and click **Connect Anki**. Approve this website's origin in Anki and any browser local-network prompt. AnkiConnect must remain bound to `127.0.0.1`; do not expose port 8765 to the internet or enable wildcard origins. HTTPS-to-localhost behavior varies by browser. TSV export is the fallback. Mobile browsers cannot connect to Anki running on another device.
+
+Connected imports create `Dictionary::<Language>` decks and the `The Linguist’s Dictionary` note type (recognition and production cards). Automatic saving is off by default for new visitors. Duplicate checks use word + language. Export preserves the browser queue; clearing browser storage deletes history and queued cards. Nothing syncs across browsers automatically.
+
+## Limitations
+
+This is a community-source reader, not an authoritative linguistic database. Extraction and language guesses can be wrong. A short word can genuinely belong to multiple languages. Accent recovery and lemma matching are not universal. Target-language definitions and partner notes can be incomplete. Chinese entries may link to traditional source pages, though simplified headwords are used for simplified queries. Subtitle frequency is word-form frequency, not a proficiency level or universal measure of usefulness. Network failure can leave secondary fields empty.
+
+The public app does not generate AI definitions or offer the personal idem chat enrichment used in the original private prototype. Source audio/images are not embedded in this release because their individual attribution requirements need a fuller implementation.
+
+## Privacy and sources
+
+Searches go directly from your browser to Wikimedia and Tatoeba; frequency lists are downloaded from GitHub. Those services receive normal request metadata. The app adds no analytics, account system or central history database. GitHub Pages itself is the hosting provider and has its own logging/privacy policies. History, cache and saved cards stay in localStorage on that browser. See [about.html](about.html) for attribution and setup details.
+
+Wiktionary and Wikipedia text remains under the applicable Creative Commons ShareAlike terms. Tatoeba sentence authors, IDs and reported licenses are linked with displayed examples. FrequencyWords/OpenSubtitles data retains its upstream license. This repository's publication does not relicense third-party content. See [SOURCES.md](SOURCES.md).

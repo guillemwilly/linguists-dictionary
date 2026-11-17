@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>The Linguist’s Dictionary</title>
+<meta name="description" content="A free multilingual dictionary for language learners. Definitions, pronunciation, word forms and optional Anki flashcards across seven languages.">
+<meta name="referrer" content="no-referrer">
+<meta property="og:title" content="The Linguist’s Dictionary">
+<meta property="og:description" content="Seven languages. One dictionary. Built for learners.">
+<meta name="theme-color" content="#d13a22">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="home">
+<header class="top"><div class="wrap">
+ <div class="brandrow">
+  <button class="brand" id="home" type="button"><span class="mark" aria-hidden="true">L<span>·</span></span><span>The Linguist’s<br><strong>Dictionary</strong></span></button>
+  <div class="tools">
+   <span class="pill" id="queueStatus" hidden></span>
+   <button class="pill" id="ankiStatus" type="button" title="Connect Anki on this computer">Connect Anki</button>
+   <button class="pill" id="autoBtn" type="button" role="switch" aria-checked="true"><span>Auto-add</span><span class="switch"></span></button>
+   <button class="icon-btn" id="themeBtn" type="button" aria-label="Theme"></button>
+  </div>
+ </div>
+ <div class="intro"><p class="overline">A dictionary for language learners</p><h1 class="hero">Words worth<br><span>understanding.</span></h1><p class="tagline">Seven languages. One dictionary. Built for learners.</p></div>
+ <form class="search" id="f" autocomplete="off">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+  <input id="q" type="search" placeholder="Search a word or an inflected form" aria-label="Word" autofocus spellcheck="false" autocapitalize="off" enterkeyhint="search">
+  <span class="kbd">/</span>
+ </form>
+ <div class="seg" id="langs" role="group" aria-label="Language"></div>
+</div></header>
+<main class="wrap" id="main"></main>
+<footer class="wrap site-footer"><a href="https://github.com/guillemwilly/linguists-dictionary">Source on GitHub ↗</a><a href="about.html">About, sources &amp; privacy</a><a href="about.html#anki">Anki setup</a><button class="pill" id="exportBtn" type="button">Export saved cards</button></footer>
+<script src="app.js"></script>
+</body>
+</html>
