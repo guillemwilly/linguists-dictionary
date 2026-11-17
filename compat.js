@@ -2,6 +2,19 @@
    detached HTML documents used for Wiktionary parsing. Keep this polyfill
    deliberately narrow so normal page selectors retain native behavior. */
 (()=>{
+  // Entries saved before this fix can contain an empty meanings array. Refresh
+  // the lookup cache once while preserving recent words and saved Anki cards.
+  try{
+    const storageKey="linguists-dictionary:v1";
+    const state=JSON.parse(localStorage.getItem(storageKey)||"{}");
+    if(!state.webkitDefinitionsFix){
+      state.cache={};
+      state.alias={};
+      state.webkitDefinitionsFix=1;
+      localStorage.setItem(storageKey,JSON.stringify(state));
+    }
+  }catch{}
+
   const nativeQueryAll=Element.prototype.querySelectorAll;
   Element.prototype.querySelectorAll=function(selector){
     if(selector===":scope > li"){
