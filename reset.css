@@ -1,0 +1,2 @@
+.entry-actions .clear-pin{min-height:34px;padding:0 8px;border-color:transparent;background:transparent;color:var(--accent)}
+.entry-actions .clear-pin:hover{border-color:var(--border);background:var(--surface-2)}
