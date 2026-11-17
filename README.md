@@ -8,6 +8,9 @@ A lightweight, browser-based dictionary for Russian, Mandarin Chinese, French, C
 
 - English definitions and a target-language definition where available.
 - Pronunciation text (IPA or pinyin), word forms, examples, etymology and links to the full sources.
+- User-driven **Contrast mode** for comparing two independently sourced entries.
+- Source-evidenced grammar frames and explicit Wiktionary collocations.
+- Cross-language translations and shared-history links across the seven supported languages.
 - Best-effort language detection, with alternate-language switches for ambiguous words.
 - Inflected-form lookup and accent-recovery where the source supports them.
 - Optional Anki Desktop integration, related-word notes, and TSV export when direct connection is unavailable.
@@ -29,7 +32,7 @@ Connected imports create `Dictionary::<Language>` decks and the `The Linguist’
 
 This is a community-source reader, not an authoritative linguistic database. Extraction and language guesses can be wrong. A short word can genuinely belong to multiple languages. Accent recovery and lemma matching are not universal. Target-language definitions and partner notes can be incomplete. Chinese entries may link to traditional source pages, though simplified headwords are used for simplified queries. Subtitle frequency is word-form frequency, not a proficiency level or universal measure of usefulness. Network failure can leave secondary fields empty.
 
-The public app does not generate AI definitions or offer the personal idem chat enrichment used in the original private prototype. Source audio/images are not embedded in this release because their individual attribution requirements need a fuller implementation.
+The public app does not use AI at runtime, require an API key, or offer the personal idem chat enrichment used in the original private prototype. Contrast, grammar and cross-language features only reformat explicit source evidence; missing evidence is omitted rather than generated. Source audio/images are not embedded in this release because their individual attribution requirements need a fuller implementation.
 
 ## Privacy and sources
 
