@@ -1,0 +1,8 @@
+/* Keep learner-facing meanings ahead of large inflection tables on phones. */
+@media(max-width:600px){
+  body:not(.home) .col-main>div[style*="margin-top:28px"]{order:4!important}
+  body:not(.home) .col-main>.section-h,
+  body:not(.home) .col-main>.sentences{order:3}
+  body:not(.home) .col-main>.deep,
+  body:not(.home) .col-main>.deep-sub{order:5}
+}
