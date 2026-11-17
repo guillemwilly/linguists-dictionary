@@ -1,20 +1,32 @@
-/* WebKit returns an empty list for :scope direct-child selectors on the
-   detached HTML documents used for Wiktionary parsing. Keep this polyfill
-   deliberately narrow so normal page selectors retain native behavior. */
+/* Browser compatibility for the detached Wiktionary documents parsed by the app. */
 (()=>{
-  // Entries saved before this fix can contain an empty meanings array. Refresh
-  // the lookup cache once while preserving recent words and saved Anki cards.
+  // Refresh cached entries once after the iPhone parser fixes, preserving
+  // recent words and queued Anki cards.
   try{
     const storageKey="linguists-dictionary:v1";
     const state=JSON.parse(localStorage.getItem(storageKey)||"{}");
-    if(!state.webkitDefinitionsFix){
+    if(!state.iphoneDefinitionsFix){
       state.cache={};
       state.alias={};
-      state.webkitDefinitionsFix=1;
+      state.iphoneDefinitionsFix=1;
       localStorage.setItem(storageKey,JSON.stringify(state));
     }
   }catch{}
 
+  // English Wiktionary sends iPhones a MobileFrontend response where each
+  // language body is wrapped in <section class="mf-section-*">. The original
+  // parser expects those headings, paragraphs and lists as direct children.
+  const nativeAppend=Node.prototype.appendChild;
+  Node.prototype.appendChild=function(node){
+    if(this?.tagName==="DIV"&&node?.tagName==="SECTION"&&/(^|\s)mf-section-\d+/.test(node.className||"")){
+      while(node.firstChild) nativeAppend.call(this,node.firstChild);
+      return node;
+    }
+    return nativeAppend.call(this,node);
+  };
+
+  // WebKit can also return an empty list for :scope direct-child selectors in
+  // DOMParser documents. Keep this fallback limited to the two selectors used.
   const nativeQueryAll=Element.prototype.querySelectorAll;
   Element.prototype.querySelectorAll=function(selector){
     if(selector===":scope > li"){
