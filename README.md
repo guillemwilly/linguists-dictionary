@@ -2,8 +2,6 @@
 
 **Seven languages. One dictionary. Built for learners.**
 
-[Open the dictionary](https://guillemwilly.github.io/linguists-dictionary/)
-
 A lightweight, browser-based dictionary for Russian, Mandarin Chinese, French, Catalan, Spanish, Portuguese and English. No account, server or API key required for lookups.
 
 ## Features
@@ -38,3 +36,7 @@ The public app does not generate AI definitions or offer the personal idem chat 
 Searches go directly from your browser to Wikimedia and Tatoeba; frequency lists are downloaded from GitHub. Those services receive normal request metadata. The app adds no analytics, account system or central history database. GitHub Pages itself is the hosting provider and has its own logging/privacy policies. History, cache and saved cards stay in localStorage on that browser. See [about.html](about.html) for attribution and setup details.
 
 Wiktionary and Wikipedia text remains under the applicable Creative Commons ShareAlike terms. Tatoeba sentence authors, IDs and reported licenses are linked with displayed examples. FrequencyWords/OpenSubtitles data retains its upstream license. This repository's publication does not relicense third-party content. See [SOURCES.md](SOURCES.md).
+
+## License
+
+The application code and original interface are licensed under the [MIT License](LICENSE), copyright 2026 William Beckes. Third-party dictionary text, example sentences and frequency data remain under their original licenses; see [SOURCES.md](SOURCES.md).
