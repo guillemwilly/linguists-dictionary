@@ -135,3 +135,29 @@ details.disc[open] summary::after{transform:rotate(-135deg) translateY(-2px)}
 .site-footer{padding-bottom:28px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--muted)}.site-footer a{color:var(--muted)}main.wrap{padding-top:25px;padding-bottom:70px}.sentence-credit{display:block;margin-top:5px;font-size:11px;color:var(--muted)}.sentence-credit a{color:var(--muted);text-decoration:underline}.recent .g,.recent .w{max-width:100%}.brandrow{gap:15px}.pill{min-height:36px}.icon-btn{width:36px;height:36px}.seg button{min-height:38px}.toast{border-radius:14px}.toast .msg{white-space:normal}
 @media(max-width:600px){.brandrow{align-items:flex-start;flex-wrap:wrap}.tools{gap:5px}.intro{margin-top:5vh}.hero{font-size:46px}.grid{gap:28px}.site-footer{gap:14px}.tagline{font-size:15px}.also{margin-left:0}.from{border-radius:10px}.seg{width:100%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Mobile result layout: put the learner's meaning first and keep chrome compact. */
+@media(max-width:600px){
+ body:not(.home) .brandrow{display:none}
+ body:not(.home) .top .wrap{padding-top:8px;padding-bottom:10px}
+ body:not(.home) main.wrap{padding-top:18px}
+ body:not(.home) .col-main{display:flex;flex-direction:column}
+ body:not(.home) .col-main>.from,
+ body:not(.home) .col-main>.eyebrow,
+ body:not(.home) .col-main>.hw,
+ body:not(.home) .col-main>.sub{order:0}
+ body:not(.home) .col-main>.pos{order:1}
+ body:not(.home) .col-main>.native{order:2;margin-top:22px}
+ body:not(.home) .col-main>.section-h,
+ body:not(.home) .col-main>.sentences,
+ body:not(.home) .col-main>details,
+ body:not(.home) .col-main>.deep,
+ body:not(.home) .col-main>.deep-sub{order:3}
+ body:not(.home) .pos{display:flex;flex-direction:column;margin-top:28px}
+ body:not(.home) .pos-h{order:0}
+ body:not(.home) .defs{order:1}
+ body:not(.home) .forms{order:2;margin-top:10px;font-size:12.5px}
+ body:not(.home) ol.defs>li{padding-left:32px}
+ body:not(.home) .g{font-size:17px}
+ body:not(.home) .toast{bottom:10px;max-width:calc(100% - 20px)}
+}
