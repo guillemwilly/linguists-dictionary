@@ -5,7 +5,8 @@
   try{
     const storageKey="linguists-dictionary:v1";
     const state=JSON.parse(localStorage.getItem(storageKey)||"{}");
-    if(!state.iphoneDefinitionsFix){
+    if(!state.polish1){
+      state.polish1=1;
       state.cache={};
       state.alias={};
       state.iphoneDefinitionsFix=1;

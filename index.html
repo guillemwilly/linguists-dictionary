@@ -18,31 +18,32 @@
 <link rel="stylesheet" href="reset.css?v=20261117-reset1">
 <link rel="stylesheet" href="brand.css?v=20261117-brand2">
 <link rel="stylesheet" href="morphology.css?v=20261118-1">
+<link rel="stylesheet" href="polish.css?v=20261118-1">
 </head>
 <body class="home">
 <header class="top"><div class="wrap">
  <div class="brandrow">
   <button class="brand" id="home" type="button"><span class="mark semantic-mark" aria-hidden="true"><span class="semantic-bracket">⟦</span><span class="semantic-letter">L</span><span class="semantic-bracket">⟧</span></span><span>The Linguist’s<br><strong>Dictionary</strong></span></button>
-  <div class="tools">
+
+ </div>
+ <div class="intro"><h1 class="hero">A multilingual<br><span>dictionary.</span></h1><p class="tagline">For linguists and polyglots.</p></div>
+ <div class="searchline"><form class="search" id="f" autocomplete="off">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+  <input id="q" type="search" placeholder="Search a word or an inflected form" aria-label="Word" autofocus spellcheck="false" autocapitalize="off" enterkeyhint="search">
+  <span class="kbd">/</span>
+ </form><details id="settings" class="settings"><summary aria-label="Dictionary settings">Settings</summary><div class="settings-panel"><h2>Cards &amp; appearance</h2>  <div class="tools">
    <span class="pill" id="queueStatus" hidden></span>
    <button class="pill" id="ankiStatus" type="button" title="Connect Anki on this computer">Connect Anki</button>
    <button class="pill" id="autoBtn" type="button" role="switch" aria-checked="true"><span>Auto-add</span><span class="switch"></span></button>
    <button class="icon-btn" id="themeBtn" type="button" aria-label="Theme"></button>
-  </div>
- </div>
- <div class="intro"><h1 class="hero">A multilingual<br><span>dictionary.</span></h1><p class="tagline">For linguists and polyglots.</p></div>
- <form class="search" id="f" autocomplete="off">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-  <input id="q" type="search" placeholder="Search a word or an inflected form" aria-label="Word" autofocus spellcheck="false" autocapitalize="off" enterkeyhint="search">
-  <span class="kbd">/</span>
- </form>
+  </div><a href="about.html#anki">Anki setup &amp; local access ↗</a><p>Save in this browser, export as TSV, or connect Anki Desktop. Auto-add saves each completed lookup and available partners.</p></div></details></div>
  <div class="seg" id="langs" role="group" aria-label="Language"></div>
 </div></header>
 <main class="wrap" id="main"></main>
 <footer class="wrap site-footer"><a href="https://github.com/guillemwilly/linguists-dictionary">Source on GitHub ↗</a><a href="about.html">About, sources &amp; privacy</a><a href="about.html#anki">Anki setup</a><button class="pill" id="exportBtn" type="button">Export saved cards</button></footer>
-<script src="compat.js?v=20261117-phone3"></script>
-<script src="app.js?v=20261117-webkit1"></script>
-<script src="morphology.js?v=20261118-1"></script>
+<script src="compat.js?v=20261118-polish1"></script>
+<script src="app.js?v=20261118-polish1"></script>
+<script src="morphology.js?v=20261118-polish1"></script>
 <script src="features.js?v=20261117-linguist1"></script>
 <script src="reset.js?v=20261117-reset1"></script>
 </body>

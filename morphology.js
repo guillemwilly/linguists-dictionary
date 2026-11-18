@@ -27,7 +27,15 @@
      if(marker){let reached=false;for(const node of [...copy.childNodes]){if(!reached&&node.textContent.match(/Synchronically|surface analysis/i))reached=true;if(!reached)node.remove()}}
      const mentions=[...copy.querySelectorAll('.mention[lang]')];
      if(mentions.some(n=>n.getAttribute('lang')!==code))continue;
-     const parts=mentions.map(n=>term(n,code));
+     const parts=mentions.map(n=>{
+      const part=term(n,code);if(!part)return null;
+      // Use only a gloss attached to this mention in this very analysis.
+      // Never borrow a sense from the component's separate dictionary entry.
+      let next=n.nextElementSibling;
+      while(next&&next.matches('.mention-tr,.tr,.mention-gloss-paren'))next=next.nextElementSibling;
+      if(next?.matches('.mention-gloss')){const gloss=text(next);if(gloss&&gloss.length<100)part.gloss=gloss}
+      return part;
+     });
      if(parts.length<2||parts.length>4||parts.some(x=>!x)||parts.length!==((evidence.match(/\+/g)||[]).length+1))continue;
      // Without a synchronic marker, require the whole paragraph to be a simple formula.
      if(!marker&&!/^(?:From\s+)?[^.]+\.?$/.test(evidence))continue;
@@ -45,15 +53,22 @@
  const source=(e,code,anchor)=>`https://en.wiktionary.org/wiki/${encodeURIComponent(e.core.title||e.base)}#${encodeURIComponent(anchor||LANGS[code].en)}`;
  const chip=(x,code)=>`<button type="button" class="morph-term" data-morph-word="${esc(x.lookup)}" data-morph-lang="${code}" lang="${code}">${esc(x.word)}</button>`;
  function enhance(e,code){
-  const side=document.querySelector('#main .col-side');if(!side||e.partial)return;
+  const side=document.querySelector('#main .col-side');if(!side)return;
   const m=e.core.morphology||{analyses:[],derived:[]};let html='';
-  if(e.from)html+=`<div class="morph-group"><h5>Form resolution</h5><p><span lang="${code}">${esc(e.from.form)}</span> → <span lang="${code}">${esc(e.word)}</span></p><p class="morph-note">${esc(e.from.desc)}. Lookup resolved to this entry. Inflection and spelling variants are not derivational analyses.</p></div>`;
-  for(const a of m.analyses)html+=`<div class="morph-group"><h5>${a.mode}</h5><div class="morph-parts">${a.parts.map(x=>`<div>${chip(x,code)}<small>${x.kind}</small></div>`).join('<span aria-hidden="true">+</span>')}</div><p class="morph-note">${esc(a.evidence)}</p><a class="mini-source" href="${source(e,code,a.anchor)}" target="_blank" rel="noopener">View source analysis ↗</a></div>`;
-  if(!m.analyses.length)html+=`<p class="morph-note">${m.multiple?'This entry has multiple etymologies. A combined breakdown is not shown to avoid mixing unrelated words.':'No supported word-structure analysis was extracted. This does not mean the word has no internal structure.'}</p>`;
-  if(m.derived.length)html+=`<div class="morph-group"><h5>Derived terms</h5><div class="morph-family">${m.derived.map(x=>chip(x,code)).join('')}</div><p class="morph-note">Listed under “Derived terms” in Wiktionary. This source section can include compounds and expressions as well as derivatives. It is not an exhaustive morphological family or a claim of present-day productivity.</p><a class="mini-source" href="${source(e,code,m.derived[0].anchor)}" target="_blank" rel="noopener">View derived terms ↗</a></div>`;
+  if(e.from)html+=`<div class="morph-group"><h5>Form resolution</h5><p><span lang="${code}">${esc(e.from.form)}</span> → <span lang="${code}">${esc(e.word)}</span></p><p class="morph-note">${esc(e.from.desc)}. Lookup resolved to this entry.</p></div>`;
+  for(const a of m.analyses)html+=`<div class="morph-group"><h5>${a.mode}</h5><div class="morph-parts">${a.parts.map(x=>`<div>${chip(x,code)}<small>${x.kind}</small>${x.gloss?`<span class="component-gloss">${esc(x.gloss)}</span>`:""}</div>`).join('<span aria-hidden="true">+</span>')}</div><p class="morph-note">${a.parts.some(x=>x.gloss)?"Glosses are quoted from this source analysis, not a general definition of each component.":"The source lists these components without contextual glosses."}</p><a class="mini-source" href="${source(e,code,a.anchor)}" target="_blank" rel="noopener">View source analysis ↗</a></div>`;
+  if(!m.analyses.length)html+=`<p class="morph-note">${m.multiple?'This entry has multiple etymologies. A combined breakdown is not shown to avoid mixing unrelated words.':'No explicit breakdown was extracted from this entry.'}</p>`;
+  if(m.derived.length)html+=`<div class="morph-group"><h5>Derived terms</h5><div class="morph-family">${m.derived.map(x=>chip(x,code)).join('')}</div><a class="mini-source" href="${source(e,code,m.derived[0].anchor)}" target="_blank" rel="noopener">View derived terms ↗</a></div>`;
   else html+='<p class="morph-note">No linked derivatives were extracted from a “Derived terms” section.</p>';
-  html+='<p class="morph-note morph-limit">Formation evidence is separate from inflection and historical etymology. A base may itself be complex; affix meaning and productivity depend on context.</p>';
-  const card=document.createElement('section');card.className='card morphology';card.setAttribute('aria-label','Word structure and family');card.innerHTML='<h4>Word structure &amp; family</h4>'+html+`<a class="mini-source" href="${source(e,code)}" target="_blank" rel="noopener">Wiktionary contributors · source & history ↗</a>`;side.prepend(card);
+  html+=`<details class="analysis-about"><summary>About this analysis</summary><p class="morph-note">Only explicit linked source analyses are shown. “Current word structure” requires a synchronic statement; “Source-listed formation” is not a claim of current productivity. A base may itself be complex. Missing analysis does not mean a word lacks internal structure.</p>${m.analyses.map(a=>`<p class="morph-note">Source wording: ${esc(a.evidence)}</p>`).join('')}<p class="morph-note">Derived terms can include compounds and expressions, not just derivatives. Alternatives, uncertain analyses and combined homonym breakdowns are omitted. Inflection and historical etymology remain distinct.</p><a class="mini-source" href="about.html#sources">Sources &amp; licenses</a></details>`;
+  const card=document.createElement('section');card.className='card morphology';card.setAttribute('aria-label','Word structure and family');card.innerHTML='<h4>Word structure &amp; family</h4>'+html+`<a class="mini-source" href="${source(e,code)}" target="_blank" rel="noopener">Wiktionary contributors · source & history ↗</a>`;const main=document.querySelector('#main .col-main');
+  const deep=main?.querySelector('.deep');if(deep)deep.before(card);else main?.append(card);
+  const ety=[...side.children].find(x=>x.querySelector('h4')?.textContent==='Etymology');
+  if(ety){
+   const duplicate=m.analyses.some(a=>clean(a.evidence).replace(/[\u200e\u200f]/g,'')===clean(e.core.ety).replace(/[\u200e\u200f]/g,''));
+   if(duplicate)ety.remove();
+   else {const history=document.createElement('details');history.className='disc historical-detail';history.innerHTML='<summary>Historical etymology</summary><div class="history-content"><p>'+esc(e.core.ety)+'</p><a class="mini-source" href="'+source(e,code)+'" target="_blank" rel="noopener">View source history ↗</a></div>';card.after(history);ety.remove()}
+  }
   card.querySelectorAll('[data-morph-word]').forEach(b=>b.onclick=()=>{document.querySelector('#q').value=b.dataset.morphWord;lookup(b.dataset.morphWord,b.dataset.morphLang)});
  }
  extractEn=function(sec,code,word){const e=previousExtract(sec,code,word);e.morphology=extract(sec,code);return e};

@@ -59,7 +59,7 @@ async function j(url,ms=9000){const c=new AbortController();const t=setTimeout((
 async function parsePage(wiki,title){
  const u=t=>`https://${wiki}.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(t)}&prop=text&format=json&formatversion=2&redirects=1&origin=*`;
  let r=await j(u(title)); if(r.error&&title!==title.toLowerCase()) r=await j(u(title.toLowerCase()));
- if(r.error) return null;
+ if(r.error){if(["missingtitle","invalidtitle"].includes(r.error.code))return null;throw new Error(r.error.info||"Source request failed")}
  return {title:r.parse.title,doc:new DOMParser().parseFromString(r.parse.text,"text/html")};
 }
 function isLangHeading(el){return /mw-heading[12]\b/.test(el.className)||/^H[12]$/.test(el.tagName)}
@@ -106,7 +106,7 @@ function extractEn(sec,code,word){
   if(el.tagName==="OL"&&cur.defs.length===0){
    for(const li of el.querySelectorAll(":scope > li")){
     const c=li.cloneNode(true);
-    const labels=[...c.querySelectorAll(":scope > .ib-content, :scope > span > .ib-content, .label-content")].filter(x=>!x.closest("dl")).map(x=>clean(x.textContent));
+    const labels=[...c.querySelectorAll(":scope > .ib-content, :scope > span > .ib-content, .label-content")].filter(x=>x.closest("li")===c&&!x.closest("dl")).map(x=>clean(x.textContent));
     const exs=[];
     c.querySelectorAll(".h-usage-example").forEach(x=>{const ex=clean(x.querySelector(".e-example")?.innerHTML.replace(/<(?!\/?b>)[^>]+>/g,"")),tr=clean(x.querySelector(".e-translation")?.textContent);if(ex)exs.push({ex,tr})});
     if(code==="zh") c.querySelectorAll("dd").forEach(dd=>{const h=dd.querySelector(".Hans")||dd.querySelector(".Hani");if(!h||/Classifier/i.test(dd.textContent))return;const parts=dd.textContent.split("―");exs.push({ex:esc(clean(h.textContent)),tr:clean(parts[parts.length-1])})});
@@ -135,7 +135,7 @@ async function nativeDef(code,title){
    let t=clean(c.textContent).replace(/^◆\s*/,"");
    if(t.length>4) return t.length>240?t.slice(0,237)+"…":t;
   }
- }catch{}
+ }catch(err){throw err}
  return null;
 }
 async function tatoeba(code,word){
@@ -144,7 +144,7 @@ async function tatoeba(code,word){
   const r=await j(`https://api.tatoeba.org/unstable/sentences?lang=${LANGS[code].tat}&q=${encodeURIComponent(word)}&trans:lang=${tr}&sort=relevance&limit=60&showtrans=matching`);
   const seen=new Set();
   return (r.data||[]).filter(s=>{if(!s.translations?.length||code==="zh"&&!s.text.includes(word))return false;const n=code==="zh"?s.text.length/2:s.text.split(/\s+/).length;const t=s.translations[0].text.toLowerCase();if(n<4||n>14||seen.has(t))return false;seen.add(t);return true}).slice(0,3).map(s=>({ex:esc(s.text),tr:s.translations[0].text,id:s.id,owner:s.owner||"Tatoeba contributor",license:s.license||"See sentence page",trId:s.translations[0].id,trOwner:s.translations[0].owner||"Tatoeba contributor"}));
- }catch{return[]}
+ }catch(err){throw err}
 }
 async function wikiNote(code,title){
  try{const r=await j(`https://${LANGS[code].wiki}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`,6000);
@@ -155,12 +155,12 @@ const freqMaps={};
 async function freqRank(code,word){
  const k=LANGS[code].freq;
  try{
-  if(!freqMaps[k]) freqMaps[k]=fetch(`https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/${k}/${k}_50k.txt`).then(r=>r.text()).then(t=>{const m=new Map();t.split("\n").forEach((l,i)=>{const w=l.split(" ")[0];if(w&&!m.has(w))m.set(w,i+1)});return m});
+  if(!freqMaps[k]) freqMaps[k]=fetch(`https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/${k}/${k}_50k.txt`).then(r=>{if(!r.ok)throw new Error(r.status);return r.text()}).then(t=>{const m=new Map();t.split("\n").forEach((l,i)=>{const w=l.split(" ")[0];if(w&&!m.has(w))m.set(w,i+1)});return m});
   const m=await freqMaps[k]; return m.get(unstress(word).toLowerCase())||null;
- }catch{return undefined}
+ }catch{delete freqMaps[k];return undefined}
 }
 function freqBand(r){
- if(r===undefined) return {n:0,label:"Unknown",sub:""};
+ if(r===undefined) return {n:0,label:"Unavailable",sub:"Frequency data could not be loaded"};
  if(!r) return {n:0,label:"Unranked",sub:"Not listed among the top 50k word forms in this subtitle dataset"};
  const sub=`#${r.toLocaleString("en")} in film subtitles`;
  if(r<=1000) return {n:5,label:"Very common",sub};
@@ -236,24 +236,30 @@ async function lookup(raw,forced){
  try{history.replaceState(null,"",`?q=${encodeURIComponent(base)}${code?"&lang="+code:""}`)}catch{}
  const ck=st.alias[akey], cached=ck&&st.cache[ck];
  if(cached){render(cached,cached.code);pushRecent(cached,cached.code);maybeAuto(cached,cached.code);return}
- main.innerHTML=`<div class="grid fade"><div><div class="skel" style="width:120px"></div><h2 class="hw" lang="${code||""}">${esc(word)}</h2><div class="skel" style="width:40%"></div><div class="skel" style="width:85%;height:56px;margin-top:28px"></div><div class="skel" style="width:70%;margin-top:40px"></div><div class="skel" style="width:60%"></div></div><div><div class="skel" style="height:96px"></div><div class="skel" style="height:72px"></div></div></div>`;
+ main.innerHTML=`<div class="grid fade lookup-state" role="status" aria-label="Loading dictionary entry"><div><div class="skel" style="width:120px"></div><h2 class="hw" lang="${code||""}">${esc(word)}</h2><div class="skel" style="width:40%"></div><div class="skel" style="width:85%;height:56px;margin-top:28px"></div><div class="skel" style="width:70%;margin-top:40px"></div><div class="skel" style="width:60%"></div></div><div><div class="skel" style="height:96px"></div><div class="skel" style="height:72px"></div></div></div>`;
  const r=await resolve(word,code).catch(()=>null);
  if(my!==seq) return;
- if(!r||r.missing){renderMiss(word,r);return}
+ if(!r){renderFailure(word,code);return}
+ if(r.missing){renderMiss(word,r);return}
  code=r.code; const lemma=r.lemma, key=code+":"+lemma.toLowerCase();
- const pTat=within(tatoeba(code,lemma),5000,[]),pWk=within(wikiNote(code,lemma),4000,null),pRank=within(freqRank(code,lemma),6000,undefined),pNat=within(nativeDef(code,lemma),5000,null);
+ const sourceResult=(p,ms)=>within(p.then(value=>({value,status:value&&(Array.isArray(value)?value.length:true)?"ready":"unavailable"})),ms,{value:null,status:"failed"});
+ const pTat=sourceResult(tatoeba(code,lemma),5000),pWk=within(wikiNote(code,lemma),4000,null),pRank=within(freqRank(code,lemma),6000,undefined),pNat=sourceResult(nativeDef(code,lemma),5000);
  const entry={word:r.core.headword,base:lemma,code,core:r.core,alts:r.alts,from:r.from,tat:[],wk:null,rank:undefined,nat:null,at:Date.now(),partial:true};
  render(entry,code);
  const [tat,wk,rank,nat]=await Promise.all([pTat,pWk,pRank,pNat]);
  if(my!==seq) return;
- Object.assign(entry,{tat,wk,rank,nat,partial:false});
+ Object.assign(entry,{tat:tat.value||[],wk,rank,nat:nat.value,sourceStates:{sentences:tat.status,native:nat.status},partial:false});
  st.cache[key+"|"+akey]=entry; if(Object.keys(st.alias).length>500) st.alias={}; st.alias[akey]=key+"|"+akey;
  const ks=Object.keys(st.cache); if(ks.length>150) delete st.cache[ks.sort((a,b)=>st.cache[a].at-st.cache[b].at)[0]];
  save(); render(entry,code,false); pushRecent(entry,code); maybeAuto(entry,code);
 }
+function renderFailure(word,code){
+ $("#main").innerHTML=`<section class="card lookup-state" role="status"><h2>Source request failed</h2><p>We couldn’t retrieve this entry from Wiktionary. This is not evidence that the word is missing.</p><button class="retry-source" type="button">Retry lookup</button></section>`;
+ $(".retry-source").onclick=()=>lookup(word,code);
+}
 function renderMiss(word,r){
  const code=r?.code, s=r?.sugg||[];
- $("#main").innerHTML=`<div class="fade"><div class="eyebrow">${code?LANGS[code].nat:"No match"}</div><h2 class="hw">${esc(word)}</h2><p class="err">No matching entry was returned. Check the spelling or try again if a source is unavailable.</p>${s.length?`<div class="card miss"><h4>Did you mean</h4><div class="chips">${s.map(t=>`<button type="button" data-s="${esc(t)}">${esc(t)}</button>`).join("")}</div></div>`:""}${deepLink(word,code)}</div>`;
+ $("#main").innerHTML=`<div class="fade"><div class="eyebrow">${code?LANGS[code].nat:"No match"}</div><h2 class="hw">${esc(word)}</h2><p class="err">No matching entry was found in the requested Wiktionary language section. Check the spelling or choose another language.</p>${s.length?`<div class="card miss"><h4>Did you mean</h4><div class="chips">${s.map(t=>`<button type="button" data-s="${esc(t)}">${esc(t)}</button>`).join("")}</div></div>`:""}${deepLink(word,code)}</div>`;
  $("#main").querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{$("#q").value=b.dataset.s;lookup(b.dataset.s,code||undefined)});
 }
 function pushRecent(e,code){
@@ -263,16 +269,17 @@ function pushRecent(e,code){
 function deepLink(word,code){return `<a class="deep" href="https://en.wiktionary.org/wiki/${encodeURIComponent(unstress(word))}${code?"#"+LANGS[code].en:""}" target="_blank" rel="noopener">Full Wiktionary entry ${I.arrow}</a><p class="deep-sub">More senses, usage notes and source history</p>`}
 function render(e,code,anim=true){
  const c=e.core,L=LANGS[code];
- const labels=[...new Set(c.pos.flatMap(p=>p.defs.flatMap(d=>d.labels)))].filter(x=>x.length<30).slice(0,4);
+ // Usage labels belong to their individual senses, never the whole entry.
  const posNames=[...new Set(c.pos.map(p=>p.pos.toLowerCase().replace("definitions","")))].filter(Boolean);
  const typed=e.from?.form||e.base;
 let m=`${e.from?`<div class="from"><span class="typed" lang="${code}">${esc(e.from.form)}</span>${I.arrow}<span>${esc(e.from.desc||"form of")}</span>${(e.from.other||[]).map(o=>`<button type="button" class="alt" data-lemma="${esc(o)}" lang="${code}">or ${esc(o)}</button>`).join("")}</div>`:""}<div class="eyebrow"><span>${L.nat}</span>${posNames.length?`<span class="sep"></span><span>${esc(posNames.join(", "))}</span>`:""}${(e.alts||[]).length?`<span class="also">Also in ${e.alts.map(a=>`<button type="button" class="alt" data-alt="${a}">${LANGS[a].nat}</button>`).join("")}</span>`:""}</div>
- <h2 class="hw" lang="${code}">${esc(e.word)}</h2>
- <div class="sub">${c.pron?`<span class="pron">${esc(c.pron)}</span>`:""}${c.audio?`<button class="icon-btn" id="play" type="button" aria-label="Listen">${I.speaker}</button>`:""}${c.trad?`<span class="tag" lang="zh-Hant">繁 ${esc(c.trad)}</span>`:""}${labels.map(l=>`<span class="tag">${esc(l)}</span>`).join("")}</div>`;
+ <div class="headword-row"><h2 class="hw" lang="${code}">${esc(e.word)}</h2><div class="entry-save" id="toast"><button type="button" id="addBtn" ${e.partial?"disabled":""}>Save cards</button><span class="msg" id="ankiMsg" role="status" aria-live="polite">${e.partial?"Loading details…":""}</span></div></div>
+ <div class="sub">${c.pron?`<span class="pron">${esc(c.pron)}</span>`:""}${c.audio?`<button class="icon-btn" id="play" type="button" aria-label="Listen">${I.speaker}</button>`:""}${c.trad?`<span class="tag" lang="zh-Hant">繁 ${esc(c.trad)}</span>`:""}</div>`;
  if(e.nat) m+=`<div class="native"><span class="k">${L.nat}</span>${esc(e.nat)}</div>`;
- else if(e.partial&&code!=="en") m+=`<div class="native"><div class="skel" style="width:30%;margin:2px 0 10px"></div><div class="skel" style="width:75%;margin:0"></div></div>`;
+ else if(code!=="en") m+=`<div class="native source-state">${e.partial?"Loading target-language definition…":e.sourceStates?.native==="failed"?`Target-language request failed. <button type="button" data-retry-extra>Retry</button>`:"No target-language definition was extracted from this source."}</div>`;
  c.pos.forEach(p=>{m+=`<section class="pos"><div class="pos-h"><h3>${esc(p.pos==="Definitions"?"Meanings":p.pos)}</h3></div>${p.forms&&code!=="zh"?`<p class="forms">${esc(p.forms)}</p>`:""}<ol class="defs">${p.defs.slice(0,6).map(d=>`<li><div class="g">${d.labels.map(l=>`<span class="lbl">${esc(l)}</span>`).join("")}${esc(d.g)}</div>${d.exs.map(x=>`<div class="ex" lang="${code}">${safeHtml(x.ex)}${x.tr?`<i lang="en">${esc(x.tr)}</i>`:""}</div>`).join("")}</li>`).join("")}</ol></section>`});
  if(e.tat.length) m+=`<h3 class="section-h">Real sentences</h3><div class="sentences">${e.tat.map(x=>`<div class="ex" lang="${code}">${safeHtml(x.ex)}<i lang="en">${esc(x.tr)}</i>${x.id?`<small class="sentence-credit"><a href="https://tatoeba.org/en/sentences/show/${x.id}" target="_blank" rel="noopener">${esc(x.owner)} · ${esc(x.license)}</a> / <a href="https://tatoeba.org/en/sentences/show/${x.trId}" target="_blank" rel="noopener">translation: ${esc(x.trOwner)}</a></small>`:""}</div>`).join("")}</div>`;
+ if(!e.tat.length)m+=`<div class="sentences source-state" role="status">${e.partial?"Loading additional examples…":e.sourceStates?.sentences==="failed"?`Example request failed. <button type="button" data-retry-extra>Retry</button>`:"No additional examples returned by Tatoeba."}</div>`;
  const tables=code==="zh"?[]:c.tables, p0=c.pos[0]?.pos||"";
  const tname=/Verb/.test(p0)?"Conjugation":/Noun|Adjective|Pronoun|Numeral/.test(p0)?"Declension":"Inflection";
  if(tables.length) m+=`<div style="margin-top:28px">${tables.map((t,i)=>`<details class="disc"><summary>${tname}${tables.length>1?` · ${i+1}`:""}</summary><div class="tblwrap">${safeHtml(t)}</div></details>`).join("")}</div>`;
@@ -284,14 +291,17 @@ let m=`${e.from?`<div class="from"><span class="typed" lang="${code}">${esc(e.fr
  if(partners.length) s+=`<div class="card"><h4>${ptitle}</h4><div class="chips">${partners.map(p=>`<button type="button" data-p="${esc(p)}" lang="${code}">${esc(p)}</button>`).join("")}</div></div>`;
  if(c.ety) s+=`<div class="card"><h4>Etymology</h4><p class="clamp">${esc(c.ety)}</p></div>`;
  if(e.wk) s+=`<div class="card culture">${e.wk.thumb?`<img src="${esc(e.wk.thumb)}" alt="" loading="lazy">`:""}<h4>Culture · Wikipedia</h4><p class="wk-t">${esc(e.wk.title)}</p><p class="clamp">${esc(e.wk.extract)}</p>${e.wk.url?`<a href="${esc(e.wk.url)}" target="_blank" rel="noopener">Read on Wikipedia ↗</a>`:""}</div>`;
- const toast=`<div class="toast" id="toast"><span class="msg" id="ankiMsg">${st.auto?`<span class="spin"></span>Adding to Anki`:"Ready to save"}</span><button type="button" id="addBtn" ${st.auto?"hidden":""}>Save cards</button></div>`;
- $("#main").innerHTML=`<article class="${anim?"fade":""}"><div class="grid"><div class="col-main">${m}</div><aside class="col-side">${s}</aside></div><p class="src"><a href="https://en.wiktionary.org/wiki/${encodeURIComponent(c.title||e.base)}#${L.en}" target="_blank" rel="noopener">Wiktionary contributors</a> · <a href="https://${L.wiki}.wiktionary.org/wiki/${encodeURIComponent(e.base)}" target="_blank" rel="noopener">Target-language source</a> · <a href="about.html#sources">Licenses &amp; attribution</a>. Entries are extracted and reformatted; coverage varies.</p>${toast}</article>`;
+
+ $("#main").innerHTML=`<article class="${anim?"fade":""}"><div class="grid"><div class="col-main">${m}</div><aside class="col-side">${s}</aside></div><p class="src"><a href="https://en.wiktionary.org/wiki/${encodeURIComponent(c.title||e.base)}#${L.en}" target="_blank" rel="noopener">Wiktionary contributors</a> · <a href="https://${L.wiki}.wiktionary.org/wiki/${encodeURIComponent(e.base)}" target="_blank" rel="noopener">Target-language source</a> · <a href="about.html#sources">Licenses &amp; attribution</a>. Entries are extracted and reformatted; coverage varies.</p></article>`;
  if(c.audio){const a=new Audio(c.audio);$("#play").onclick=()=>{a.currentTime=0;a.play()}}
  $("#main").querySelectorAll("[data-p]").forEach(x=>x.onclick=()=>{$("#q").value=x.dataset.p;lookup(x.dataset.p,code)});
  $("#main").querySelectorAll(".clamp").forEach(x=>x.onclick=()=>x.classList.toggle("open"));
 $("#main").querySelectorAll("[data-alt]").forEach(x=>x.onclick=()=>{$("#q").value=typed;lookup(typed,x.dataset.alt)});
 $("#main").querySelectorAll("[data-lemma]").forEach(x=>x.onclick=()=>{$("#q").value=x.dataset.lemma;lookup(x.dataset.lemma,code)});
  $("#addBtn").onclick=()=>addEntry(e,code,true);
+ const native=$(".col-main>.native"),lastPos=[...document.querySelectorAll(".col-main>.pos")].at(-1);if(native&&lastPos)lastPos.after(native);
+ $("#main").querySelectorAll("[data-retry-extra]").forEach(b=>b.onclick=()=>{const key=code+":"+e.base.toLowerCase();for(const k of Object.keys(st.alias))if(st.alias[k]?.startsWith(key+"|"))delete st.alias[k];lookup(e.base,code)});
+
 }
 function homeHtml(){
  const hint=`<p class="hint">Automatic language suggestions · inflected forms where available · type fr: to choose French · press / to search</p>`;
@@ -332,10 +342,10 @@ function exportQueue(){
 }
 function noteFrom(e,code,partnerOf){
  const c=e.core,L=LANGS[code],p0=c.pos[0]||{defs:[],forms:""};
- const meaning=c.pos.flatMap(p=>p.defs.slice(0,2).map(d=>d.g)).slice(0,3).join("; ").slice(0,200);
+ const meaning=c.pos.flatMap(p=>p.defs.slice(0,2).map(d=>(d.labels.length?"("+d.labels.join(", ")+") ":"")+d.g)).slice(0,3).join("; ").slice(0,200);
  const ex=(c.pos.flatMap(p=>p.defs.flatMap(d=>d.exs))[0])||(e.tat||[])[0];
- const labels=[...new Set(c.pos.flatMap(p=>p.defs.flatMap(d=>d.labels)))].slice(0,4);
- const notes=[labels.join(", "),e.rank!==undefined?freqLabel(e.rank):"",partnerOf?`partner of ${partnerOf}`:"",c.classifiers.length?`measure word: ${c.classifiers.join(", ")}`:"",c.ety?("Etym: "+(c.ety.length>220?c.ety.slice(0,217)+"…":c.ety)):""].filter(Boolean).map(esc).join("<br>");
+
+ const notes=[e.rank!==undefined?freqLabel(e.rank):"",partnerOf?`partner of ${partnerOf}`:"",c.classifiers.length?`measure word: ${c.classifiers.join(", ")}`:"",c.ety?("Etym: "+(c.ety.length>220?c.ety.slice(0,217)+"…":c.ety)):""].filter(Boolean).map(esc).join("<br>");
  return {deckName:`Dictionary::${L.name}`,modelName:MODEL,tags:["linguists-dictionary",L.name.toLowerCase(),...(partnerOf?["partner"]:[])],options:{allowDuplicate:false},
   fields:{Word:e.word,Language:L.name,Meaning:esc(meaning),Definition:esc(e.nat||""),Pronunciation:esc(c.pron||""),Forms:esc([p0.forms,c.trad?"traditional "+c.trad:""].filter(Boolean).join(" · ")),Example:ex?`${safeHtml(ex.ex)}${ex.tr?"<br><i>"+esc(ex.tr)+"</i>":""}`:"",Notes:notes,Source:`<a href="https://en.wiktionary.org/wiki/${encodeURIComponent(c.title||e.word)}#${L.en}">Wiktionary contributors</a> (CC BY-SA, extracted). ${e.nat?`<a href="https://${L.wiki}.wiktionary.org/wiki/${encodeURIComponent(e.base||e.word)}">Target-language Wiktionary</a>. `:""}${ex?.id?`<a href="https://tatoeba.org/en/sentences/show/${ex.id}">Tatoeba: ${esc(ex.owner)}</a> (${esc(ex.license)}); <a href="https://tatoeba.org/en/sentences/show/${ex.trId}">translation: ${esc(ex.trOwner)}</a>.`:""}`}};
 }
@@ -350,10 +360,10 @@ async function addNotes(notes){
  }
  return {added,skipped};
 }
-function hideLater(t,ms){if(!t)return;clearTimeout(t._h);t.classList.remove("hide");t._h=setTimeout(()=>t.classList.add("hide"),ms)}
+function hideLater(t,ms){ /* Inline save status stays available, including Undo. */ }
 async function addEntry(e,code,manual){
  const msg=$("#ankiMsg"),btn=$("#addBtn"),toast=$("#toast");
- if(btn)btn.hidden=true; if(msg)msg.innerHTML=`<span class="spin"></span>Adding to Anki`;
+ if(btn)btn.hidden=true; if(msg)msg.innerHTML=`<span class="spin"></span>Saving cards…`;
  const notes=[noteFrom(e,code)];
  const requestedConnection=!!ankiOk;
  const ps=[...e.core.partners,...e.core.classifiers].slice(0,4);
@@ -383,7 +393,7 @@ async function flushQueue(){
  if(!st.queue.length) return;
  try{const r=await addNotes(st.queue);st.queue=[];save();setStatus(true);const m=$("#ankiMsg");if(m){m.innerHTML=`${I.check}<span>Queue sent · ${r.added.length} added</span>`;const b=$("#addBtn");if(b)b.hidden=true;hideLater($("#toast"),3000)}}catch{setStatus(false)}
 }
-function maybeAuto(e,code){if(st.auto) addEntry(e,code,false); else {const m=$("#ankiMsg"),b=$("#addBtn");if(m)m.textContent="Ready to save";if(b)b.disabled=false}}
+function maybeAuto(e,code){if(st.auto) addEntry(e,code,false); else {const m=$("#ankiMsg"),b=$("#addBtn");if(m)m.textContent="";if(b)b.disabled=false}}
 
 // ---------- boot ----------
 applyTheme(); renderLangs(); renderAuto();
@@ -391,9 +401,10 @@ $("#home").onclick=goHome;
 $("#f").onsubmit=ev=>{ev.preventDefault();const v=$("#q").value.trim();if(v){lookup(v);$("#q").blur()}};
 addEventListener("keydown",ev=>{
  if(ev.key==="/"&&document.activeElement!==$("#q")){ev.preventDefault();$("#q").focus();$("#q").select()}
+ if(ev.key==="Escape"&&$("#settings")?.open){$("#settings").open=false;$("#settings summary").focus();return}
  if(ev.key==="Escape"){if($("#q").value){$("#q").value="";$("#q").focus()}else goHome()}
 });
-addEventListener("scroll",()=>document.body.classList.toggle("scrolled",scrollY>4),{passive:true});
+addEventListener("scroll",()=>document.body.classList.toggle("scrolled",scrollY>72),{passive:true});
 setTimeout(()=>LATIN.forEach(c=>freqRank(c,"a")),1200);
 setStatus(false);
 $("#ankiStatus").onclick=()=>ensureAnki().then(flushQueue).catch(()=>{setStatus(false);alert("Open Anki Desktop with AnkiConnect installed, then allow this site. If your browser blocks local access, use Export saved cards. See Anki setup below.")});
