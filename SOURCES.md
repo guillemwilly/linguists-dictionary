@@ -8,3 +8,7 @@ No dictionary database or frequency corpus is bundled in this repository. The ap
 - **FrequencyWords / OpenSubtitles:** word-form ranks loaded from the 2018 files in [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords), which documents its sources and licenses. The app shows a rank/band rather than reproducing the corpus. These ranks are noisy and not lemma frequencies or CEFR levels.
 
 Contrast mode compares independently sourced entries; it does not generate a verdict about which word is correct. If a source is missing or a field cannot be extracted, this app does not assert that the linguistic information does not exist. Please check the linked source.
+
+## Word structure and family
+
+Morphology reformats explicit plus-sign formation analyses from English Wiktionary. Only same-language linked components in short, unambiguous formulas are accepted. Explicit synchronic/surface analyses are labeled current word structure; other formulas are labeled source-listed formation, not proof of present-day productivity. Historical components, uncertain/alternative analyses and entries with multiple etymologies are omitted. Derived words come only from named Derived terms sections, never Related terms or spelling similarity. Chinese links require explicitly simplified (Hans) source markup; coverage is intentionally sparse. Inflected-form resolution remains separate. Each panel links back to the source entry and its history; text retains applicable Wikimedia ShareAlike terms. No additional service or runtime AI is used.
