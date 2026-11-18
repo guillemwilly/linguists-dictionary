@@ -1,0 +1,4 @@
+a.lookup-word{color:inherit;text-decoration:none;cursor:pointer;-webkit-user-select:text;user-select:text}
+a.lookup-word:hover{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px}
+a.lookup-word:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+a.lookup-word:active{color:var(--accent)}
