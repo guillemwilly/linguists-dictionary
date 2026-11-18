@@ -5,7 +5,8 @@
   try{
     const storageKey="linguists-dictionary:v1";
     const state=JSON.parse(localStorage.getItem(storageKey)||"{}");
-    if(!state.polish1){
+    if(!state.nounGender1){
+      state.nounGender1=1;
       state.polish1=1;
       state.cache={};
       state.alias={};
