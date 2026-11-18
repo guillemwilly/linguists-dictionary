@@ -1,0 +1,9 @@
+.headword-row{flex-wrap:wrap;align-items:flex-start;row-gap:8px}
+.headword-row .hw{flex:1 1 auto;max-width:100%;overflow-wrap:anywhere}
+.headword-actions{display:flex;align-items:flex-start;gap:6px;max-width:100%;flex-wrap:wrap;flex:0 1 auto}
+.headword-actions .entry-save{flex:0 1 auto;min-height:64px;max-width:170px;padding-top:0;gap:4px}
+.headword-actions .entry-save .msg{min-height:16px;max-width:170px}
+.headword-actions .entry-actions{margin:0;gap:2px;flex-wrap:wrap}
+.headword-actions .entry-actions button{min-height:44px;padding:0 10px;border-radius:9px;font-weight:500}
+.headword-actions .entry-actions .clear-pin{min-width:44px;min-height:44px;padding:0 6px}
+@media(max-width:600px){.headword-actions .entry-save{flex-basis:auto}.headword-row{column-gap:12px}}
