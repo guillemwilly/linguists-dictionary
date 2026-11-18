@@ -1,7 +1,5 @@
 # The Linguist’s Dictionary
 
-**Seven languages. One dictionary. Built for linguists and polyglots.**
-
 A lightweight, browser-based dictionary for linguists and polyglots working across Russian, Mandarin Chinese, French, Catalan, Spanish, Portuguese and English. No account, server or API key required for lookups.
 
 ## Features
