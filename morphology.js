@@ -7,7 +7,7 @@
   const lang=node.getAttribute('lang');if(lang!==code||node.closest('.tr')||(code==='zh'&&!node.classList.contains('Hans')))return null;
   const a=node.matches('a')?node:node.querySelector('a[href^="/wiki/"]');if(!a)return null;
   const word=text(node),href=a.getAttribute('href')||'';if(!word||word.length>60||!href.startsWith('/wiki/')||/\/wiki\/(?:Appendix|Category|Reconstruction|Help|Wiktionary):/.test(href))return null;
-  return {word,lookup:unstress(word),kind:/^-/.test(word)?'suffix':/-$/.test(word)?'prefix':'base'};
+  return {word,lookup:unstress(word),kind:/^-.*-$/.test(word)?'affix':/^-/.test(word)?'suffix':/-$/.test(word)?'prefix':'base'};
  }
  function extract(sec,code){
   const result={analyses:[],derived:[],multiple:false};const kids=[...sec.children];
@@ -47,7 +47,7 @@
  function enhance(e,code){
   const side=document.querySelector('#main .col-side');if(!side||e.partial)return;
   const m=e.core.morphology||{analyses:[],derived:[]};let html='';
-  if(e.from)html+=`<div class="morph-group"><h5>Inflected form</h5><p><span lang="${code}">${esc(e.from.form)}</span> → <span lang="${code}">${esc(e.word)}</span></p><p class="morph-note">${esc(e.from.desc)}. This is a form of the same lexeme, not a new derivative.</p></div>`;
+  if(e.from)html+=`<div class="morph-group"><h5>Form resolution</h5><p><span lang="${code}">${esc(e.from.form)}</span> → <span lang="${code}">${esc(e.word)}</span></p><p class="morph-note">${esc(e.from.desc)}. Lookup resolved to this entry. Inflection and spelling variants are not derivational analyses.</p></div>`;
   for(const a of m.analyses)html+=`<div class="morph-group"><h5>${a.mode}</h5><div class="morph-parts">${a.parts.map(x=>`<div>${chip(x,code)}<small>${x.kind}</small></div>`).join('<span aria-hidden="true">+</span>')}</div><p class="morph-note">${esc(a.evidence)}</p><a class="mini-source" href="${source(e,code,a.anchor)}" target="_blank" rel="noopener">View source analysis ↗</a></div>`;
   if(!m.analyses.length)html+=`<p class="morph-note">${m.multiple?'This entry has multiple etymologies. A combined breakdown is not shown to avoid mixing unrelated words.':'No supported word-structure analysis was extracted. This does not mean the word has no internal structure.'}</p>`;
   if(m.derived.length)html+=`<div class="morph-group"><h5>Derived terms</h5><div class="morph-family">${m.derived.map(x=>chip(x,code)).join('')}</div><p class="morph-note">Listed under “Derived terms” in Wiktionary. This source section can include compounds and expressions as well as derivatives. It is not an exhaustive morphological family or a claim of present-day productivity.</p><a class="mini-source" href="${source(e,code,m.derived[0].anchor)}" target="_blank" rel="noopener">View derived terms ↗</a></div>`;
