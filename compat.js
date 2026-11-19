@@ -5,6 +5,7 @@
   try{
     const storageKey="linguists-dictionary:v1";
     const state=JSON.parse(localStorage.getItem(storageKey)||"{}");
+    if(!state.italian1){state.italian1=1;state.cache={};state.alias={};localStorage.setItem(storageKey,JSON.stringify(state))}
     if(!state.german1){state.german1=1;state.cache={};state.alias={};localStorage.setItem(storageKey,JSON.stringify(state))}
     if(!state.nounGender1){
       state.nounGender1=1;

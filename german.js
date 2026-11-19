@@ -1,9 +1,9 @@
-/* German support: explicit sources, preserved spelling/case, no generated analyses. */
+/* Source-language extensions (German and Italian): explicit sources, preserved spelling/case, no generated analyses. */
 LANGS.de={name:"German",nat:"Deutsch",en:"German",wiki:"de",tat:"deu",freq:"de",heads:["Deutsch"]};
 LATIN.push("de");
-const lexicalKey=(code,word)=>code==="de"?unstress(word):fold(word);
+const lexicalKey=(code,word)=>(code==="de"||code==="it")?unstress(word):fold(word);
 detect=function(w){
- const m=w.match(/^(ru|zh|fr|ca|es|pt|en|de)[:\s]\s*(.+)$/i); if(m) return [m[2].trim(),m[1].toLowerCase()];
+ const m=w.match(/^(ru|zh|fr|ca|es|pt|en|de|it)[:\s]\s*(.+)$/i); if(m) return [m[2].trim(),m[1].toLowerCase()];
  if(/[\u0400-\u04FF]/.test(w)) return [w,"ru"];
  if(/[\u3400-\u9FFF]/.test(w)) return [w,"zh"];
  return [w,st.lang==="auto"||st.lang==="ru"||st.lang==="zh"?null:st.lang];
@@ -12,6 +12,20 @@ nativeDef=async function(code,title){
  const L=LANGS[code]; if(code==="en") return null;
  try{
   const p=await parsePage(L.wiki,title); if(!p) return null;
+  if(code==="it"){
+   const sec=section(p.doc,["Italiano"]);if(!sec)return null;
+   for(const li of sec.querySelectorAll("ol > li")){
+    let chosen=li;
+    // Some entries wrap the first definition list in their headword line.
+    if(li.firstElementChild?.tagName==="B"&&clean(li.firstElementChild.textContent)===p.title){
+     const list=[...li.children].find(n=>n.tagName==="UL");
+     if(list?.firstElementChild?.tagName==="LI")chosen=list.firstElementChild;
+    }
+    const c=chosen.cloneNode(true);c.querySelectorAll("dl,ul,ol,sup,style,figure,table,.reference").forEach(n=>n.remove());
+    const text=clean(c.textContent);if(text.length>4)return text.length>240?text.slice(0,237)+"…":text;
+   }
+   return null;
+  }
   if(code==="de"){
    const sec=section(p.doc,[p.title+" (Deutsch)"]);if(!sec)return null;
    for(const marker of sec.querySelectorAll("p")){
@@ -36,6 +50,7 @@ nativeDef=async function(code,title){
 rankLangs=async function(word,cands){
  if(cands.length<2) return cands;
  // German stays an explicit alternative when an existing language matches.
+ if(cands.includes("it"))return [...await rankLangs(word,cands.filter(c=>c!=="it")),"it"];
  if(cands.includes("de"))return [...await rankLangs(word,cands.filter(c=>c!=="de")),"de"];
  const ranks=await within(Promise.all(cands.map(c=>freqRank(c,word))),2500,null);
  const prior=langPrior(),w=word.toLowerCase();
@@ -52,7 +67,7 @@ resolve=async function(word,forced,depth=0){
    const alt=base[0].toUpperCase()+base.slice(1),r=await resolve(alt,forced,1);
    if(!r.missing){r.from=r.from?{...r.from,form:base}:{form:base,desc:"capitalization adjusted"};return r}
   }
-  if(depth===0&&forced!=="de"){const alt=await accentFix(base);if(alt){const r=await resolve(alt,forced,1);if(!r.missing&&r.code!=="de"){r.from=r.from?{...r.from,form:base}:{form:base,desc:"spelling corrected"};return r}}}
+  if(depth===0&&forced!=="de"&&forced!=="it"){const alt=await accentFix(base);if(alt){const r=await resolve(alt,forced,1);if(!r.missing&&r.code!=="de"&&r.code!=="it"){r.from=r.from?{...r.from,form:base}:{form:base,desc:"spelling corrected"};return r}}}
   return {missing:true,code:forced||script,base,sugg:depth<2?await suggestions(base).catch(()=>[]):[]};
  }
  const order=await rankLangs(base,cands), code=order[0];
@@ -72,7 +87,7 @@ resolve=async function(word,forced,depth=0){
 lookup=async function(raw,forced){
  let [word,code]=forced?[raw,forced]:detect(raw);
  document.body.classList.remove("home");
- const my=++seq; const base=unstress(word).trim(); const akey=(code||"auto")+":"+(!code||code==="de"?base:base.toLowerCase());
+ const my=++seq; const base=unstress(word).trim(); const akey=(code||"auto")+":"+(!code||code==="de"||code==="it"?base:base.toLowerCase());
  const main=$("#main");
  try{history.replaceState(null,"",`?q=${encodeURIComponent(base)}${code?"&lang="+code:""}`)}catch{}
  const ck=st.alias[akey], cached=ck&&st.cache[ck];
@@ -82,7 +97,7 @@ lookup=async function(raw,forced){
  if(my!==seq) return;
  if(!r){renderFailure(word,code);return}
  if(r.missing){renderMiss(word,r);return}
- code=r.code; const lemma=r.lemma, key=code+":"+(code==="de"?lemma:lemma.toLowerCase());
+ code=r.code; const lemma=r.lemma, key=code+":"+((code==="de"||code==="it")?lemma:lemma.toLowerCase());
  const sourceResult=(p,ms)=>within(p.then(value=>({value,status:value&&(Array.isArray(value)?value.length:true)?"ready":"unavailable"})),ms,{value:null,status:"failed"});
  const pTat=sourceResult(tatoeba(code,lemma),5000),pWk=within(wikiNote(code,lemma),4000,null),pRank=within(freqRank(code,lemma),6000,undefined),pNat=sourceResult(nativeDef(code,lemma),5000);
  const entry={word:r.core.headword,base:lemma,code,core:r.core,alts:r.alts,from:r.from,tat:[],wk:null,rank:undefined,nat:null,at:Date.now(),partial:true};
@@ -91,9 +106,10 @@ lookup=async function(raw,forced){
  if(my!==seq) return;
  Object.assign(entry,{tat:tat.value||[],wk,rank,nat:nat.value,sourceStates:{sentences:tat.status,native:nat.status},partial:false});
  st.cache[key+"|"+akey]=entry; if(Object.keys(st.alias).length>500) st.alias={}; st.alias[akey]=key+"|"+akey;
+ if(code==="it"&&!entry.from&&entry.word!==base)st.alias["it:"+entry.word]=key+"|"+akey;
  const ks=Object.keys(st.cache); if(ks.length>150) delete st.cache[ks.sort((a,b)=>st.cache[a].at-st.cache[b].at)[0]];
  save(); render(entry,code,false); pushRecent(entry,code); maybeAuto(entry,code);
 };
-new MutationObserver(()=>{const h=document.querySelector('#main .col-main .hw');if(h?.lang!=="de")return;document.querySelectorAll('[data-retry-extra]').forEach(b=>b.onclick=()=>{const base=h.textContent;for(const [k,v] of Object.entries(st.alias))if(st.cache[v]?.code==="de"&&st.cache[v]?.word===base)delete st.alias[k];lookup(base,"de")})}).observe(document.querySelector('#main'),{childList:true,subtree:true});
+new MutationObserver(()=>{const h=document.querySelector('#main .col-main .hw');if(!["de","it"].includes(h?.lang))return;document.querySelectorAll('[data-retry-extra]').forEach(b=>b.onclick=()=>{const entry=Object.values(st.cache).find(e=>e.code===h.lang&&e.word===h.textContent),base=entry?.base||h.textContent;for(const [k,v] of Object.entries(st.alias))if(st.cache[v]?.code===h.lang&&st.cache[v]?.word===h.textContent)delete st.alias[k];lookup(base,h.lang)})}).observe(document.querySelector('#main'),{childList:true,subtree:true});
 renderLangs();
 if(qs&&(ql==="de"||/^de[:\s]/i.test(qs)))setTimeout(()=>lookup(qs,ql==="de"?"de":undefined),0);
