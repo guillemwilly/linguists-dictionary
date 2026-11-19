@@ -18,7 +18,7 @@ A lightweight, browser-based dictionary for linguists and polyglots working acro
 
 ## Run
 
-Open `index.html` in a browser, or serve the folder using `python3 -m http.server 8000`. No build step. GitHub Pages serves these same files.
+The official hosted dictionary is free to use. For material you are permitted to run locally under the license below, open `index.html` in a browser, or serve the folder using `python3 -m http.server 8000`. No build step. GitHub Pages serves these same files. These technical instructions do not grant additional reuse or deployment rights.
 
 ## Anki
 
@@ -42,4 +42,6 @@ Wiktionary and Wikipedia text remains under the applicable Creative Commons Shar
 
 ## License
 
-The application code and original interface are licensed under the [MIT License](LICENSE), copyright 2026 William Beckes. Third-party dictionary text, example sentences and frequency data remain under their original licenses; see [SOURCES.md](SOURCES.md).
+The hosted dictionary remains free to use. The repository is public for inspection and feedback, but new original contributions owned by William Beckes after commit `94d2a0b9048576f481400990654d97db39838677` are rights-reserved unless separately licensed. See [LICENSE](LICENSE) for the scope and permitted hosted use; public visibility does not make those additions open source.
+
+The code and original interface already released at that baseline and its ancestors remain under [MIT](LICENSE-MIT-LEGACY), including when retained in later versions. Existing MIT permissions are not revoked. Third-party dictionary text, examples, frequency data and recordings keep their own licenses; see [SOURCES.md](SOURCES.md).

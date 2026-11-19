@@ -1,21 +1,58 @@
-MIT License
-
+The Linguist's Dictionary - Licensing Notice
 Copyright (c) 2026 William Beckes
+Effective date: 19 November 2026
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. Previously released MIT material
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+The application code and original interface released at commit
+94d2a0b9048576f481400990654d97db39838677 and its ancestors remain
+available under the MIT License reproduced in LICENSE-MIT-LEGACY.
+Those permissions are not revoked or narrowed by this notice. They also
+continue to apply to that same material when it is included in later
+versions. The baseline can be obtained from:
+https://github.com/guillemwilly/linguists-dictionary/tree/94d2a0b9048576f481400990654d97db39838677
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+2. New original contributions
+
+Unless expressly licensed otherwise, all rights are reserved in new,
+copyrightable application-code and original-interface contributions
+owned by William Beckes and first published after the baseline above.
+These contributions are referred to here as the Reserved Material.
+This reservation covers only those new contributions, not pre-existing
+MIT material or third-party material. Public visibility of this
+repository is not a general grant of an open-source license for the
+Reserved Material.
+
+3. Permission to use the hosted dictionary
+
+You may access and use the official hosted dictionary free of charge,
+including ordinary browser execution and caching and its intended
+lookup, saving, Anki-transfer and export functions. Your personal notes
+remain yours. Dictionary text and other third-party content in results
+or exports retain their respective licenses.
+
+Except for that permission, rights granted under GitHub's applicable
+Terms of Service, and uses permitted by applicable law, no permission
+is granted to copy, modify, redistribute, sublicense, sell or deploy
+the Reserved Material in another service without prior written
+permission from William Beckes. This restriction does not limit any
+rights you already have in the MIT baseline or other separately
+licensed material. Permission requests may be made through a GitHub
+issue in this repository.
+
+4. Third-party material
+
+Wiktionary, Wikipedia, Tatoeba, frequency data, recordings, dependencies
+and any other third-party material are excluded from the Reserved
+Material and retain their original licenses and attribution
+requirements. See SOURCES.md and the individual source notices.
+Nothing here makes third-party content exclusive to this project or
+restricts rights granted by its upstream licensors.
+
+5. No warranty
+
+TO THE EXTENT PERMITTED BY LAW, THE RESERVED MATERIAL IS PROVIDED
+"AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL ITS COPYRIGHT HOLDER BE LIABLE FOR
+ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM ITS USE.
