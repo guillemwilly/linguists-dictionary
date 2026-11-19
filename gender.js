@@ -1,7 +1,7 @@
 /* Noun gender comes only from the lexical headword's explicit source markup. */
 (()=>{
  const extractPrevious=extractEn,renderPrevious=render;
- const languages=new Set(['ru','fr','ca','es','pt']);
+ const languages=new Set(['ru','fr','ca','es','pt','de']);
  const names={'masculine gender':'masculine','feminine gender':'feminine','neuter gender':'neuter','common gender':'common gender'};
  const short={m:'masculine',f:'feminine',n:'neuter',c:'common gender'};
  const forms=line=>{const c=line.cloneNode(true);c.querySelectorAll('.headword-tr,.tr,sup').forEach(n=>n.remove());return clean(c.textContent).replace(/\(\s*\)/g,'').replace(/•/g,'').trim()};

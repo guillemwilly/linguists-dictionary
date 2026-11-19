@@ -1,6 +1,6 @@
 # The Linguist’s Dictionary
 
-A lightweight, browser-based dictionary for linguists and polyglots working across Russian, Mandarin Chinese, French, Catalan, Spanish, Portuguese and English. No account, server or API key required for lookups.
+A lightweight, browser-based dictionary for linguists and polyglots working across German, Russian, Mandarin Chinese, French, Catalan, Spanish, Portuguese and English. No account, server or API key required for lookups.
 
 ## Features
 
@@ -10,7 +10,7 @@ A lightweight, browser-based dictionary for linguists and polyglots working acro
 - Word forms, examples, etymology and links to the full sources.
 - User-driven **Contrast mode** for comparing two independently sourced entries.
 - Source-evidenced grammar frames and explicit Wiktionary collocations.
-- Cross-language translations and shared-history links across the seven supported languages.
+- Cross-language translations and shared-history links across the eight supported languages.
 - Best-effort language detection, with alternate-language switches for ambiguous words.
 - Inflected-form lookup and accent-recovery where the source supports them.
 - Optional Anki Desktop integration, related-word notes, and TSV export when direct connection is unavailable.
