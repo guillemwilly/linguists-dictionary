@@ -47,19 +47,19 @@
  function play(r,button,status,box){
   stop();const audio=document.createElement('audio');audio.preload='none';audio.hidden=true;audio.dataset.recording=r.file;
   const supported=r.sources.filter(s=>!s.type||audio.canPlayType(s.type));const offset=(attempts.get(r.file)||0)%Math.max(1,supported.length);
-  if(!supported.length){status.textContent='No supported audio format in this browser.';return}
+  if(!supported.length){status.textContent='Not available';return}
   const mediaURL=new URL(supported[offset].url);mediaURL.search='';audio.src=mediaURL.href;box.append(audio);current=audio;
-  status.textContent='Loading recording…';button.disabled=true;
+  button.dataset.playLabel=button.dataset.playLabel||button.textContent;button.textContent=button.dataset.playLabel;button.dataset.playAria=button.dataset.playAria||button.getAttribute('aria-label')||button.dataset.playLabel;button.setAttribute('aria-label',button.dataset.playAria);status.textContent='Loading…';button.disabled=true;
   audio.onplaying=()=>{status.textContent='Playing';button.disabled=false};
   audio.onended=()=>{status.textContent='';button.disabled=false};
-  const failed=()=>{if(current!==audio)return;attempts.set(r.file,offset+1);audio.pause();status.textContent='Playback failed. Tap Listen to retry.';button.disabled=false};audio.onerror=failed;
+  const failed=()=>{if(current!==audio)return;attempts.set(r.file,offset+1);audio.pause();status.textContent='Not available';button.textContent='Retry';button.setAttribute('aria-label','Retry audio');button.disabled=false};audio.onerror=failed;
   setTimeout(()=>{if(current===audio&&audio.readyState<2)failed()},12000);
   audio.play().catch(failed);
  }
  function attach(e,code){
   const sub=document.querySelector('#main .col-main>.sub');if(!sub)return;
   const box=document.createElement('span');box.className='pron-audio';
-  box.innerHTML='<button type="button" class="recording-main" disabled>Audio…</button><details class="recording-details"><summary>Recordings &amp; credits</summary><div class="recording-content">Checking source recordings…</div></details><span class="recording-status" role="status" aria-live="polite"></span>';sub.append(box);
+  box.innerHTML='<button type="button" class="recording-main" disabled>Audio…</button><details class="recording-details" hidden><summary>Recordings &amp; credits</summary><div class="recording-content">Checking source recordings…</div></details><span class="recording-status" role="status" aria-live="polite"></span>';sub.append(box);
   if(e.partial)return;
   const key=code+':'+e.core.title+':'+e.word;
   function load(){
@@ -68,16 +68,22 @@
     if(!box.isConnected)return;
     const button=box.querySelector('.recording-main'),content=box.querySelector('.recording-content'),status=box.querySelector('.recording-status');
     box.dataset.state=result.state;
+    box.querySelector('.audio-retry')?.remove();
+    const details=box.querySelector('.recording-details');
     if(result.state!=='ready'){
-     button?.remove();const messages={none:'No recording is linked in this entry’s supported pronunciation section.',ambiguous:result.reason,unverified:'A recording was found, but its creator or license could not be verified. It is not embedded.',failed:'The recording request failed. This does not mean no recording exists.'};
-     content.textContent=messages[result.state];
-     if(result.state==='failed'){const retry=document.createElement('button');retry.type='button';retry.textContent='Retry audio';retry.onclick=()=>{box.removeAttribute('data-state');cache.delete(key);content.textContent='Checking source recordings…';load()};content.append(retry)}
+     button?.remove();details.hidden=true;details.open=false;content.replaceChildren();
+     status.textContent='Not available';status.setAttribute('aria-label','Audio not available');
+     if(result.state==='failed'){
+      const retry=document.createElement('button');retry.type='button';retry.className='audio-retry';retry.textContent='Retry';retry.setAttribute('aria-label','Retry audio');
+      retry.onclick=()=>{box.removeAttribute('data-state');cache.delete(key);retry.disabled=true;status.textContent='Loading…';load()};box.append(retry);
+     }
      return;
     }
+    details.hidden=false;status.textContent='';status.removeAttribute('aria-label');
     // A retry after a failed request needs a fresh main control.
     let main=button;if(!main){main=document.createElement('button');main.type='button';main.className='recording-main';box.prepend(main)}
     main.disabled=false;main.textContent='Listen';main.setAttribute('aria-label','Listen to headword '+e.word+(result.items[0].label?', '+result.items[0].label:''));main.onclick=()=>play(result.items[0],main,status,box);
-    content.innerHTML='<p>Headword recording: <strong lang="'+code+'">'+esc(e.word)+'</strong>'+(e.from?' (not the searched form '+esc(e.from.form)+')':'')+'.</p>'+result.items.map((r,i)=>'<div class="recording-credit"><button type="button" data-recording="'+i+'">Listen'+(r.label?' · '+esc(r.label):'')+'</button><p>'+esc(r.creator)+'</p>'+(r.attribution&&r.attribution!==r.creator?'<p>'+esc(r.attribution)+'</p>':'')+(r.credit?'<p>'+esc(r.credit)+'</p>':'')+'<a href="'+esc(r.source)+'" target="_blank" rel="noopener">Recording source</a> · <a href="'+esc(r.licenseUrl)+'" target="_blank" rel="noopener">'+esc(r.license)+'</a></div>').join('')+'<p>Unedited recording; browser format conversion may be supplied by Wikimedia. <a href="https://en.wiktionary.org/wiki/'+encodeURIComponent(e.core.title||e.base)+'#'+LANGS[code].en+'" target="_blank" rel="noopener">Pronunciation source</a></p>'+(result.partialFailure?'<p>Some recording metadata could not be loaded.</p>':'');
+    content.innerHTML='<p>Headword recording: <strong lang="'+code+'">'+esc(e.word)+'</strong>'+(e.from?' (not the searched form '+esc(e.from.form)+')':'')+'.</p>'+result.items.map((r,i)=>'<div class="recording-credit"><button type="button" data-recording="'+i+'">Listen'+(r.label?' · '+esc(r.label):'')+'</button><p>'+esc(r.creator)+'</p>'+(r.attribution&&r.attribution!==r.creator?'<p>'+esc(r.attribution)+'</p>':'')+(r.credit?'<p>'+esc(r.credit)+'</p>':'')+'<a href="'+esc(r.source)+'" target="_blank" rel="noopener">Recording source</a> · <a href="'+esc(r.licenseUrl)+'" target="_blank" rel="noopener">'+esc(r.license)+'</a></div>').join('')+'<p>Unedited recording; browser format conversion may be supplied by Wikimedia. <a href="https://en.wiktionary.org/wiki/'+encodeURIComponent(e.core.title||e.base)+'#'+LANGS[code].en+'" target="_blank" rel="noopener">Pronunciation source</a></p>';
     content.querySelectorAll('[data-recording]').forEach(b=>b.onclick=()=>play(result.items[+b.dataset.recording],b,status,box));
    });
   }

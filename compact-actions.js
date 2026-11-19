@@ -14,6 +14,13 @@
   if(button.textContent!==label)button.textContent=label;
   button.title=description;button.setAttribute('aria-label',description);
   actions.querySelector('span')?.remove();
+  const status=save.querySelector('.msg');
+  if(status&&/^[0-9]+ notes saved in this browser$/.test(status.textContent)){
+   const count=st.queue.length,label=count.toLocaleString('en')+' saved';
+   status.textContent=label;status.setAttribute('aria-label',count+' '+(count===1?'note':'notes')+' saved in this browser');status.dataset.savedCount=String(count);
+  }else if(status?.dataset.savedCount!==undefined&&!/^[0-9,]+ saved$/.test(status.textContent)){
+   status.removeAttribute('aria-label');delete status.dataset.savedCount;
+  }
  }
  new MutationObserver(compact).observe(main,{childList:true,subtree:true});compact();
 })();
